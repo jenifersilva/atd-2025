@@ -32,7 +32,7 @@ npm run dev
 ### Execute the performance test
 
 ```bash
-k6 run tests/k6/login.test.js
+k6 run tests/k6/performance.test.js
 ```
 
 ### Advanced execution options
@@ -40,19 +40,19 @@ k6 run tests/k6/login.test.js
 **1. With detailed output:**
 
 ```bash
-k6 run --vus 5 --duration 30s tests/k6/login.test.js
+k6 run --vus 5 --duration 30s tests/k6/performance.test.js
 ```
 
 **2. Simulating gradual load:**
 
 ```bash
-k6 run tests/k6/login.test.js
+k6 run tests/k6/performance.test.js
 ```
 
 **3. With CSV report (using extension):**
 
 ```bash
-k6 run --out csv=results.csv tests/k6/login.test.js
+k6 run --out csv=results.csv tests/k6/performance.test.js
 ```
 
 ## What the test does
