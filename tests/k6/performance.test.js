@@ -76,57 +76,57 @@ export default function () {
 
   sleep(1);
 
-  if (authToken) {
-    group("get-products", function () {
-      const productsRes = http.get(`${BASE_URL}/products`, {
+  let firstProductId = 0;
+  group("get-products", function () {
+    const productsRes = http.get(`${BASE_URL}/products`, {
+      headers: {
+        Authorization: `Bearer ${authToken}`,
+      },
+    });
+
+    check(productsRes, {
+      "get products status 200": (r) => r.status === 200,
+      "products data exists": (r) => {
+        try {
+          const body = JSON.parse(r.body);
+          firstProductId = body.data[0].id;
+          return body.success === true && Array.isArray(body.data);
+        } catch {
+          return false;
+        }
+      },
+    });
+  });
+
+  sleep(1);
+
+  group("checkout", function () {
+    const checkoutRes = http.post(
+      `${BASE_URL}/checkout`,
+      JSON.stringify({
+        items: [{ productId: firstProductId, quantity: 1 }],
+        paymentMethod: "cash",
+      }),
+      {
         headers: {
+          "Content-Type": "application/json",
           Authorization: `Bearer ${authToken}`,
         },
-      });
+      }
+    );
 
-      check(productsRes, {
-        "get products status 200": (r) => r.status === 200,
-        "products data exists": (r) => {
-          try {
-            const body = JSON.parse(r.body);
-            return body.success === true && Array.isArray(body.data);
-          } catch {
-            return false;
-          }
-        },
-      });
-    });
-
-    sleep(1);
-
-    group("checkout", function () {
-      const checkoutRes = http.post(
-        `${BASE_URL}/checkout`,
-        JSON.stringify({
-          items: [{ productId: 1, quantity: 1 }],
-          paymentMethod: "cash",
-        }),
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${authToken}`,
-          },
+    check(checkoutRes, {
+      "checkout status 200": (r) => r.status === 200,
+      "checkout success": (r) => {
+        try {
+          const body = JSON.parse(r.body);
+          return body.success === true && body.data?.id !== undefined;
+        } catch {
+          return false;
         }
-      );
-
-      check(checkoutRes, {
-        "checkout status 200": (r) => r.status === 200,
-        "checkout success": (r) => {
-          try {
-            const body = JSON.parse(r.body);
-            return body.success === true && body.data?.id !== undefined;
-          } catch {
-            return false;
-          }
-        },
-      });
+      },
     });
-  }
+  });
 
   sleep(1);
 }
