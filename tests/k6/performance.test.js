@@ -18,36 +18,31 @@ const BASE_URL = "http://localhost:3000";
 
 export default function () {
   let authToken = "";
-
-  group("get-products", function () {
-    const productsRes = http.get(`${BASE_URL}/products`);
-    check(productsRes, {
-      "get products status 200": (r) => r.status === 200,
-      "products is array": (r) => Array.isArray(JSON.parse(r.body)),
-    });
-  });
-
-  sleep(1);
+  const uniqueEmail = `user_${Date.now()}_${Math.random()
+    .toString(36)
+    .substr(2, 9)}@example.com`;
+  const password = "testPassword123";
 
   group("create-user", function () {
-    const uniqueEmail = `user_${Date.now()}_${Math.random()
-      .toString(36)
-      .substr(2, 9)}@example.com`;
-
     const registerRes = http.post(
       `${BASE_URL}/auth/register`,
       JSON.stringify({
         email: uniqueEmail,
-        password: "testPassword123",
+        password: password,
         name: "Test User",
       }),
       { headers: { "Content-Type": "application/json" } }
     );
 
     check(registerRes, {
-      "register status 200": (r) => r.status === 200,
-      "register returns message": (r) =>
-        JSON.parse(r.body).message !== undefined,
+      "register status 201": (r) => r.status === 201,
+      "register success": (r) => {
+        try {
+          return JSON.parse(r.body).success === true;
+        } catch {
+          return false;
+        }
+      },
     });
   });
 
@@ -57,25 +52,53 @@ export default function () {
     const loginRes = http.post(
       `${BASE_URL}/auth/login`,
       JSON.stringify({
-        email: "john@example.com",
-        password: "password123",
+        email: uniqueEmail,
+        password: password,
       }),
       { headers: { "Content-Type": "application/json" } }
     );
 
     check(loginRes, {
       "login status 200": (r) => r.status === 200,
-      "login returns token": (r) => JSON.parse(r.body).token !== undefined,
+      "login returns token": (r) => {
+        try {
+          const body = JSON.parse(r.body);
+          return body.success === true && body.data?.token !== undefined;
+        } catch {
+          return false;
+        }
+      },
     });
 
-    if (loginRes.status === 200) {
-      authToken = JSON.parse(loginRes.body).token;
-    }
+    const responseBody = JSON.parse(loginRes.body);
+    authToken = responseBody.data.token;
   });
 
   sleep(1);
 
   if (authToken) {
+    group("get-products", function () {
+      const productsRes = http.get(`${BASE_URL}/products`, {
+        headers: {
+          Authorization: `Bearer ${authToken}`,
+        },
+      });
+
+      check(productsRes, {
+        "get products status 200": (r) => r.status === 200,
+        "products data exists": (r) => {
+          try {
+            const body = JSON.parse(r.body);
+            return body.success === true && Array.isArray(body.data);
+          } catch {
+            return false;
+          }
+        },
+      });
+    });
+
+    sleep(1);
+
     group("checkout", function () {
       const checkoutRes = http.post(
         `${BASE_URL}/checkout`,
@@ -93,9 +116,10 @@ export default function () {
 
       check(checkoutRes, {
         "checkout status 200": (r) => r.status === 200,
-        "checkout returns orderId": (r) => {
+        "checkout success": (r) => {
           try {
-            return JSON.parse(r.body).orderId !== undefined;
+            const body = JSON.parse(r.body);
+            return body.success === true && body.data?.id !== undefined;
           } catch {
             return false;
           }
