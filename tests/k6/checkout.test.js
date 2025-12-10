@@ -58,6 +58,7 @@ export default function () {
     const res = http.post(url, payload, params);
     const duration = Date.now() - start;
     checkoutTrend.add(duration);
+    //checkoutTrend.add(res.timings.duration);
     check(res, { "checkout status 201": (r) => r.status === 201 });
   });
   sleep(1);

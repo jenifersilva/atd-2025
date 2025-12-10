@@ -13,8 +13,6 @@ export const options = {
   },
 };
 
-const BASE_URL = getBaseUrl();
-
 function parseJSON(body) {
   try {
     return JSON.parse(body);
@@ -31,7 +29,7 @@ export default function () {
 
   group("create-user", function () {
     const res = http.post(
-      `${BASE_URL}/auth/register`,
+      `${getBaseUrl()}/auth/register`,
       JSON.stringify({ email: uniqueEmail, password, name: "Test User" }),
       { headers: { "Content-Type": "application/json" } }
     );
@@ -53,7 +51,7 @@ export default function () {
   sleep(1);
 
   group("get-products", function () {
-    const res = http.get(`${BASE_URL}/products`, {
+    const res = http.get(`${getBaseUrl()}/products`, {
       headers: { Authorization: `Bearer ${authToken}` },
     });
 
@@ -71,7 +69,7 @@ export default function () {
 
   group("checkout", function () {
     const res = http.post(
-      `${BASE_URL}/checkout`,
+      `${getBaseUrl()}/checkout`,
       JSON.stringify({
         items: [{ productId: firstProductId, quantity: 1 }],
         paymentMethod: "cash",
