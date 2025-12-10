@@ -1,5 +1,8 @@
 import http from "k6/http";
 import { check, sleep, group } from "k6";
+import { login } from "./helpers/login.js";
+import { randomEmail } from "./helpers/randomEmail.js";
+import { getBaseUrl } from "./helpers/getBaseUrl.js";
 
 export const options = {
   vus: 5,
@@ -10,7 +13,7 @@ export const options = {
   },
 };
 
-const BASE_URL = "http://localhost:3000";
+const BASE_URL = getBaseUrl();
 
 function parseJSON(body) {
   try {
@@ -20,24 +23,8 @@ function parseJSON(body) {
   }
 }
 
-function authenticate(email, password) {
-  const response = http.post(
-    `${BASE_URL}/auth/login`,
-    JSON.stringify({ email, password }),
-    { headers: { "Content-Type": "application/json" } }
-  );
-
-  if (response.status === 200) {
-    const body = parseJSON(response.body);
-    return body?.data?.token || null;
-  }
-  return null;
-}
-
 export default function () {
-  const uniqueEmail = `user_${Date.now()}_${Math.random()
-    .toString(36)
-    .substr(2, 9)}@example.com`;
+  const uniqueEmail = randomEmail();
   const password = "testPassword123";
   let authToken = "";
   let firstProductId = 1;
@@ -57,7 +44,7 @@ export default function () {
   sleep(1);
 
   group("login", function () {
-    authToken = authenticate(uniqueEmail, password);
+    authToken = login(uniqueEmail, password);
     check(authToken, {
       "token obtained": (token) => token !== null,
     });

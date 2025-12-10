@@ -55,6 +55,38 @@ k6 run tests/k6/performance.test.js
 k6 run --out csv=results.csv tests/k6/performance.test.js
 ```
 
+### 4. K6 Web dashboard
+
+To generate and view a k6 web dashboard:
+
+1. Install the `k6` web dashboard extension:
+
+```bash
+npm install -g k6-reporter
+```
+
+2. Run the test and generate the dashboard:
+
+```bash
+K6_WEB_DASHBOARD=true K6_WEB_DASHBOARD_PERIOD=1s k6 run  tests/k6/performance.test.js
+```
+
+3. Open the generated dashboard in your browser to explore the results visually.
+
+4. To export the K6 web dashboard:
+
+```bash
+K6_WEB_DASHBOARD=true K6_WEB_DASHBOARD_EXPORT="tests/k6/report.html" K6_WEB_DASHBOARD_PERIOD=1s k6 run  tests/k6/performance.test.js
+```
+
+### 5. Pass BASE_URL via command line
+
+You can override the default `BASE_URL` by passing it as an environment variable:
+
+```bash
+k6 run tests/k6/performance.test.js -e BASE_URL=https://your-api-url.com
+```
+
 ## What the test does
 
 The test simulates real API usage with the following scenarios:
